@@ -1,0 +1,4 @@
+rootProject.name = 'coding-lagom'
+
+include 'service-a-api', 'service-a-impl'
+

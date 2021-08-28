@@ -1,7 +1,9 @@
+
 target/
-/sbt/.idea/
+build/
+.idea/
+
 /sbt/project/project
 /sbt/.bsp/
 
-/gradle/.idea/
-/gradle/build
+/gradle/.gradle
