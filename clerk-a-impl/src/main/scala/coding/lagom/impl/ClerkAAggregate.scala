@@ -1,23 +1,14 @@
 package coding.lagom.impl
 
-import play.api.libs.json.Json
-import play.api.libs.json.Format
-import java.time.LocalDateTime
-
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.cluster.sharding.typed.scaladsl._
 import akka.persistence.typed.PersistenceId
-import akka.persistence.typed.scaladsl.Effect
-import akka.persistence.typed.scaladsl.EventSourcedBehavior
-import akka.persistence.typed.scaladsl.ReplyEffect
-import com.lightbend.lagom.scaladsl.persistence.AggregateEvent
-import com.lightbend.lagom.scaladsl.persistence.AggregateEventTag
-import com.lightbend.lagom.scaladsl.persistence.AkkaTaggerAdapter
-import com.lightbend.lagom.scaladsl.playjson.JsonSerializer
-import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
+import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, ReplyEffect}
+import com.lightbend.lagom.scaladsl.persistence.{AggregateEvent, AggregateEventTag, AkkaTaggerAdapter}
+import com.lightbend.lagom.scaladsl.playjson.{JsonSerializer, JsonSerializerRegistry}
 import play.api.libs.json._
 
+import java.time.LocalDateTime
 import scala.collection.immutable.Seq
 
 /**
@@ -56,16 +47,17 @@ object ClerkABehavior {
       )
 
   }
+
   /*
    * This method is extracted to write unit tests that are completely independendant to Akka Cluster.
    */
   private[impl] def create(persistenceId: PersistenceId) = EventSourcedBehavior
-      .withEnforcedReplies[ClerkACommand, ClerkAEvent, ClerkAState](
-        persistenceId = persistenceId,
-        emptyState = ClerkAState.initial,
-        commandHandler = (cart, cmd) => cart.applyCommand(cmd),
-        eventHandler = (cart, evt) => cart.applyEvent(evt)
-      )
+    .withEnforcedReplies[ClerkACommand, ClerkAEvent, ClerkAState](
+      persistenceId = persistenceId,
+      emptyState = ClerkAState.initial,
+      commandHandler = (cart, cmd) => cart.applyCommand(cmd),
+      eventHandler = (cart, evt) => cart.applyEvent(evt)
+    )
 }
 
 /**
@@ -74,7 +66,7 @@ object ClerkABehavior {
 case class ClerkAState(message: String, timestamp: String) {
   def applyCommand(cmd: ClerkACommand): ReplyEffect[ClerkAEvent, ClerkAState] =
     cmd match {
-      case x: Hello              => onHello(x)
+      case x: Hello => onHello(x)
       case x: UseGreetingMessage => onGreetingMessageUpgrade(x)
     }
 
@@ -82,12 +74,13 @@ case class ClerkAState(message: String, timestamp: String) {
     evt match {
       case GreetingMessageChanged(msg) => updateMessage(msg)
     }
+
   private def onHello(cmd: Hello): ReplyEffect[ClerkAEvent, ClerkAState] =
     Effect.reply(cmd.replyTo)(Greeting(s"$message, ${cmd.name}!"))
 
   private def onGreetingMessageUpgrade(
-    cmd: UseGreetingMessage
-  ): ReplyEffect[ClerkAEvent, ClerkAState] =
+                                        cmd: UseGreetingMessage
+                                      ): ReplyEffect[ClerkAEvent, ClerkAState] =
     Effect
       .persist(GreetingMessageChanged(cmd.message))
       .thenReply(cmd.replyTo) { _ =>
@@ -111,7 +104,7 @@ object ClerkAState {
     * namespaced under a typekey that specifies a name and also the type of the commands
     * that sharded actor can receive.
     */
-  val typeKey: EntityTypeKey[ClerkACommand] = EntityTypeKey[ClerkACommand]("ClerkAggregate")
+  val typeKey: EntityTypeKey[ClerkACommand] = EntityTypeKey[ClerkACommand]("ClerkAAggregate")
 
   /**
     * Format for the hello state.
@@ -163,7 +156,7 @@ trait ClerkACommandSerializable
   * This interface defines all the commands that the ClerkAAggregate supports.
   */
 sealed trait ClerkACommand
-    extends ClerkACommandSerializable
+  extends ClerkACommandSerializable
 
 /**
   * A command to switch the greeting message.
@@ -172,7 +165,7 @@ sealed trait ClerkACommand
   * when all the events emitted by this command are successfully persisted.
   */
 case class UseGreetingMessage(message: String, replyTo: ActorRef[Confirmation])
-    extends ClerkACommand
+  extends ClerkACommand
 
 /**
   * A command to say hello to someone using the current greeting message.
@@ -181,7 +174,7 @@ case class UseGreetingMessage(message: String, replyTo: ActorRef[Confirmation])
   * person.
   */
 case class Hello(name: String, replyTo: ActorRef[Greeting])
-    extends ClerkACommand
+  extends ClerkACommand
 
 final case class Greeting(message: String)
 
@@ -197,23 +190,20 @@ case object Confirmation {
       if ((json \ "reason").isDefined)
         Json.fromJson[Rejected](json)
       else
-        Json.fromJson[Accepted](json)
+        Json.fromJson[Accepted.type](json)
     }
 
     override def writes(o: Confirmation): JsValue = {
       o match {
-        case acc: Accepted => Json.toJson(acc)
+        case acc: Accepted.type => Json.toJson(acc)
         case rej: Rejected => Json.toJson(rej)
       }
     }
   }
 }
 
-sealed trait Accepted extends Confirmation
-
-case object Accepted extends Accepted {
-  implicit val format: Format[Accepted] =
-    Format(Reads(_ => JsSuccess(Accepted)), Writes(_ => Json.obj()))
+case object Accepted extends Confirmation {
+  implicit val format: Format[Accepted.type] = Json.format
 }
 
 case class Rejected(reason: String) extends Confirmation
@@ -239,7 +229,7 @@ object ClerkASerializerRegistry extends JsonSerializerRegistry {
     // the replies use play-json as well
     JsonSerializer[Greeting],
     JsonSerializer[Confirmation],
-    JsonSerializer[Accepted],
+    JsonSerializer[Accepted.type],
     JsonSerializer[Rejected]
   )
 }

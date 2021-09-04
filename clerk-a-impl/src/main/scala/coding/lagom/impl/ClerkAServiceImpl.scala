@@ -5,7 +5,7 @@ import akka.stream.scaladsl.Source
 import akka.util.Timeout
 import akka.{Done, NotUsed}
 import coding.lagom.api
-import coding.lagom.api.{ClerkAGreetingMessage, ClerkAService}
+import coding.lagom.api.{ClerkAGreetingMessage, ClerkAService, ClerkBService}
 import com.lightbend.lagom.scaladsl.api.ServiceCall
 import com.lightbend.lagom.scaladsl.api.broker.Topic
 import com.lightbend.lagom.scaladsl.api.transport.BadRequest
@@ -19,10 +19,10 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Implementation of the ClerkAService.
   */
-class ClerkAServiceImpl(
-                         clusterSharding: ClusterSharding,
-                         persistentEntityRegistry: PersistentEntityRegistry
-                       )(implicit ec: ExecutionContext)
+class ClerkAServiceImpl(clarkB: ClerkBService)
+                       (clusterSharding: ClusterSharding,
+                        persistentEntityRegistry: PersistentEntityRegistry)
+                       (implicit ec: ExecutionContext)
   extends ClerkAService {
 
   /**
@@ -47,15 +47,10 @@ class ClerkAServiceImpl(
         .map(greeting => greeting.message)
   }
 
-  /*
-  override def hello(id: String): ServiceCall[NotUsed, String] = ServiceCall {
-    _ =>
-      Future({
-        log.info("asking for hello from {}", id)
-        s"Hi $id"
-      })
-  }
-  */
+//  override def hello(id: String): ServiceCall[NotUsed, String] = ServiceCall {
+//    _ =>
+//      clarkB.hello("xxx").invoke()
+//  }
 
 
   override def useGreeting(id: String): ServiceCall[ClerkAGreetingMessage, Done] = ServiceCall { request =>
