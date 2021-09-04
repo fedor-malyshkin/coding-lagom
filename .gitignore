@@ -2,8 +2,4 @@
 target/
 build/
 .idea/
-
-/sbt/project/project
-/sbt/.bsp/
-
-/gradle/.gradle
+.gradle
