@@ -39,9 +39,7 @@ abstract class ClerkAApplication(context: LagomApplicationContext)
   // Initialize the sharding of the Aggregate. The following starts the aggregate Behavior under
   // a given sharding entity typeKey.
   clusterSharding.init(
-    Entity(ClerkAState.typeKey)(
-      entityContext => ClerkABehavior.create(entityContext)
-    )
+    Entity(ClerkAState.typeKey)(entityContext => ClerkABehavior.create(entityContext))
   )
 
 }

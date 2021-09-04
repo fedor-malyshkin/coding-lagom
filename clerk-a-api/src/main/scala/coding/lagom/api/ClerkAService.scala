@@ -25,8 +25,7 @@ trait ClerkAService extends Service {
   def hello(id: String): ServiceCall[NotUsed, String]
 
   /**
-    * Example: curl -H "Content-Type: application/json" -X POST -d '{"message":
-    * "Hi"}' http://localhost:9000/api/hello/Alice
+    * Example: curl -H "Content-Type: application/json" -X POST -d '{"message": "Hi"}' http://localhost:9000/api/hello/Alice
     */
   def useGreeting(id: String): ServiceCall[ClerkAGreetingMessage, Done]
 
@@ -41,7 +40,7 @@ trait ClerkAService extends Service {
   override final def descriptor: Descriptor = {
     import Service._
     // @formatter:off
-    named("coding-lagom")
+    named("clerk-b")
       .withCalls(
         pathCall("/api/hello/:id", hello _),
         pathCall("/api/hello/:id", useGreeting _),
