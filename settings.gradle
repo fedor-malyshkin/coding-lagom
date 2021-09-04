@@ -1,0 +1,4 @@
+rootProject.name = 'coding-lagom'
+
+include 'clerk-a-api', 'clerk-a-impl', 'clerk-b-api'
+
